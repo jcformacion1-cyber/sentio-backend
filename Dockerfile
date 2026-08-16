@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install yt-dlp
 RUN pip3 install --no-cache-dir --break-system-packages yt-dlp
 
+# Ensure yt-dlp is in PATH
+ENV PATH="/root/.local/bin:${PATH}"
+
 WORKDIR /app
 
 COPY package*.json ./
