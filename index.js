@@ -21,12 +21,28 @@ app.use(express.json());
 const pendingResolutions = new Map();
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
+app.get('/api/health', async (req, res) => {
+  const health = {
     status: 'ok',
     service: 'sentio-backend',
-    timestamp: new Date().toISOString()
-  });
+    timestamp: new Date().toISOString(),
+    youtubeResolver: {
+      available: false,
+      provider: 'yt-dlp'
+    }
+  };
+
+  try {
+    const { stdout: versionOutput } = await execAsync('yt-dlp --version');
+    health.youtubeResolver.available = true;
+    health.youtubeResolver.version = versionOutput.trim();
+    console.log(`[Backend] yt-dlp version: ${versionOutput.trim()}`);
+  } catch (error) {
+    console.error('[Backend] yt-dlp not available:', error.message);
+    health.youtubeResolver.error = 'yt-dlp not installed';
+  }
+
+  res.json(health);
 });
 
 // YouTube health check
@@ -68,6 +84,17 @@ app.post('/api/youtube/resolve', async (req, res) => {
     return res.status(400).json({ error: 'Missing artist or title' });
   }
 
+  // Check if yt-dlp is available
+  try {
+    await execAsync('yt-dlp --version');
+  } catch (error) {
+    console.error('[Backend] yt-dlp not available for resolution');
+    return res.status(503).json({ 
+      error: 'yt-dlp is not installed on the backend',
+      code: 'YTDLP_NOT_INSTALLED'
+    });
+  }
+
   const cacheKey = `${artist}::${title}`;
   
   // Check if resolution is already in progress
@@ -92,6 +119,8 @@ app.post('/api/youtube/resolve', async (req, res) => {
       
       // Execute yt-dlp command
       const command = `yt-dlp "${searchQuery}" --print "%(id)s|%(title)s|%(uploader)s|%(duration)s|%(thumbnail)s" --no-playlist --skip-download --quiet`;
+      
+      console.log(`[Backend] Executing: yt-dlp search for "${artist} ${title}"`);
       
       const { stdout } = await execAsync(command);
       
@@ -120,7 +149,7 @@ app.post('/api/youtube/resolve', async (req, res) => {
       };
 
     } catch (error) {
-      console.error(`[Backend] Resolution failed for ${artist} - ${title}:`, error);
+      console.error(`[Backend] Resolution failed for ${artist} - ${title}:`, error.message);
       throw error;
     }
   })();
@@ -138,8 +167,16 @@ app.post('/api/youtube/resolve', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`[Backend] SENTIO server running on port ${PORT}`);
   console.log(`[Backend] Health check: http://localhost:${PORT}/api/health`);
   console.log(`[Backend] YouTube health: http://localhost:${PORT}/api/health/youtube`);
+  
+  // Startup diagnostics
+  try {
+    const { stdout: versionOutput } = await execAsync('yt-dlp --version');
+    console.log(`[Backend] yt-dlp version: ${versionOutput.trim()}`);
+  } catch (error) {
+    console.error('[Backend] WARNING: yt-dlp not available:', error.message);
+  }
 });

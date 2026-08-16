@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["python311", "python311Packages.setuptools"]
+
+[phases.build]
+cmds = [
+  "pip install yt-dlp",
+  "npm install"
+]
+
+[start]
+cmd = "node index.js"
+
+[healthcheck]
+path = "/api/health"
