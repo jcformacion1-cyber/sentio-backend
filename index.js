@@ -1,7 +1,7 @@
 /**
- * SENTIO Backend Server v2.0
+ * SENTIO Backend Server v2.1
  * Handles yt-dlp YouTube resolution and health checks
- * Includes yt-dlp installation via Dockerfile
+ * Includes yt-dlp installation via Dockerfile with full path fixes
  */
 
 const express = require('express');
