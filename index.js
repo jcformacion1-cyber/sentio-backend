@@ -34,7 +34,7 @@ app.get('/api/health', async (req, res) => {
   };
 
   try {
-    const { stdout: versionOutput } = await execAsync('yt-dlp --version');
+    const { stdout: versionOutput } = await execAsync('/usr/local/bin/yt-dlp --version');
     health.youtubeResolver.available = true;
     health.youtubeResolver.version = versionOutput.trim();
     console.log(`[Backend] yt-dlp version: ${versionOutput.trim()}`);
@@ -50,13 +50,13 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/health/youtube', async (req, res) => {
   try {
     // Check yt-dlp version
-    const { stdout: versionOutput } = await execAsync('yt-dlp --version');
+    const { stdout: versionOutput } = await execAsync('/usr/local/bin/yt-dlp --version');
     const version = versionOutput.trim();
     
     // Check impersonation targets
     let impersonation = false;
     try {
-      const { stdout: impersonateOutput } = await execAsync('yt-dlp --list-impersonate-targets');
+      const { stdout: impersonateOutput } = await execAsync('/usr/local/bin/yt-dlp --list-impersonate-targets');
       impersonation = impersonateOutput.includes('available');
     } catch (err) {
       console.log('[Backend] Impersonation check failed (may not be supported):', err.message);
@@ -87,7 +87,7 @@ app.post('/api/youtube/resolve', async (req, res) => {
 
   // Check if yt-dlp is available
   try {
-    await execAsync('yt-dlp --version');
+    await execAsync('/usr/local/bin/yt-dlp --version');
   } catch (error) {
     console.error('[Backend] yt-dlp not available for resolution');
     return res.status(503).json({ 
@@ -119,7 +119,7 @@ app.post('/api/youtube/resolve', async (req, res) => {
       const searchQuery = `ytsearch5:${artist} ${title}`;
       
       // Execute yt-dlp command
-      const command = `yt-dlp "${searchQuery}" --print "%(id)s|%(title)s|%(uploader)s|%(duration)s|%(thumbnail)s" --no-playlist --skip-download --quiet`;
+      const command = `/usr/local/bin/yt-dlp "${searchQuery}" --print "%(id)s|%(title)s|%(uploader)s|%(duration)s|%(thumbnail)s" --no-playlist --skip-download --quiet`;
       
       console.log(`[Backend] Executing: yt-dlp search for "${artist} ${title}"`);
       
@@ -175,7 +175,7 @@ app.listen(PORT, async () => {
   
   // Startup diagnostics
   try {
-    const { stdout: versionOutput } = await execAsync('yt-dlp --version');
+    const { stdout: versionOutput } = await execAsync('/usr/local/bin/yt-dlp --version');
     console.log(`[Backend] yt-dlp version: ${versionOutput.trim()}`);
   } catch (error) {
     console.error('[Backend] WARNING: yt-dlp not available:', error.message);
