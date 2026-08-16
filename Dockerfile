@@ -1,5 +1,8 @@
 FROM node:18-slim
 
+# Force cache invalidation with build arg
+ARG BUILD_DATE=2026-08-16
+
 # Install Python3, curl, and yt-dlp
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
