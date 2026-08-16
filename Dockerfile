@@ -7,6 +7,7 @@ ARG BUILD_DATE=2026-08-16
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install yt-dlp via curl to system directory (v2.1 fix)
